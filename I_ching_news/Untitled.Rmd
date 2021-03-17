@@ -1,0 +1,113 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.10.2
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+```{python}
+# #!pip install gensim
+```
+
+```{python}
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+import gensim 
+from nltk.tokenize import word_tokenize
+from sklearn.decomposition import TruncatedSVD
+```
+
+```{python}
+df = pd.read_csv('I_CHING_CONTENT.csv')
+```
+
+```{python}
+df.Content
+```
+
+```{python}
+text = df.Content[0]
+```
+
+```{python}
+text = text.lower()
+```
+
+```{python}
+#import nltk
+```
+
+```{python}
+# #!pip install textblob
+import nltk
+nltk.download()
+```
+
+```{python}
+import re
+```
+
+```{python}
+text
+```
+
+```{python}
+words = re.split(r'\W+', text)
+print(words)
+```
+
+```{python}
+import string 
+```
+
+```{python}
+table = str.maketrans('', '', string.punctuation)
+stripped = [w.translate(table) for w in words]
+```
+
+```{python jupyter={'outputs_hidden': True}}
+stripped
+```
+
+```{python}
+from nltk.corpus import stopwords
+stop_words = stopwords.words('english')
+print(stop_words)
+```
+
+```{python}
+def is_not_digit(words):
+    for s in words:
+        if s.isdigit():
+            return False
+        return True
+        
+```
+
+```{python}
+words = [w for w in words if not w in stop_words and is_not_digit(w)]
+```
+
+```{python}
+len(words)
+```
+
+```{python jupyter={'outputs_hidden': True}}
+words
+```
+
+```{python}
+
+```

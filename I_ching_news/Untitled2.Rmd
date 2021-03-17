@@ -1,0 +1,258 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.10.2
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+```{python}
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation
+from sklearn.datasets import fetch_20newsgroups
+import numpy as np
+```
+
+```{python}
+import pandas as pd
+```
+
+```{python}
+dataset = fetch_20newsgroups(shuffle=True, random_state=1, remove=('headers', 'footers', 'quotes'))
+```
+
+```{python}
+dataset.keys()
+```
+
+```{python}
+len(dataset.DESCR)
+```
+
+```{python}
+len(dataset.data)
+```
+
+```{python}
+dataset.target
+```
+
+```{python}
+dataset.target_names
+```
+
+```{python}
+pd.
+```
+
+```{python}
+documents = pd.DataFrame({'content': dataset.data, 'topic': dataset.target})
+```
+
+```{python}
+documents
+```
+
+```{python}
+documents['content'][0]
+```
+
+```{python}
+import re
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+```
+
+```{python}
+text=re.sub('[^a-zA-z]',' ',documents['content'][0])
+```
+
+```{python}
+text
+```
+
+```{python}
+text=text.lower()
+```
+
+```{python}
+text
+```
+
+```{python}
+text=text.split()
+```
+
+```{python jupyter={'outputs_hidden': True}}
+text
+```
+
+```{python}
+text=[PorterStemmer().stem(word) for word in text if not word in stopwords.words('english')]
+```
+
+```{python jupyter={'outputs_hidden': True}}
+text
+```
+
+```{python}
+stop = stopwords.words('english')
+print(stop)
+```
+
+```{python}
+corpus=[]
+for doc in documents.content:
+    text=re.sub('[^a-zA-z]',' ', doc)
+    text=text.lower()
+    text=text.split()
+    text=[PorterStemmer().stem(word) for word in text if not word in stop]
+    text=' '.join(text)
+    corpus.append(text)
+```
+
+```{python}
+documents['clean_content'] = corpus
+```
+
+```{python}
+documents.head()
+```
+
+### Bag of words
+
+```{python}
+processed_docs = documents.clean_content.str.split()
+```
+
+```{python}
+processed_docs
+```
+
+```{python}
+import gensim
+```
+
+```{python}
+dictionary=gensim.corpora.Dictionary(processed_docs)
+```
+
+```{python}
+count=0
+for k,v in dictionary.iteritems():
+    print(k,v)
+    count+=1
+    if count>20:
+        break
+```
+
+```{python}
+dictionary.filter_extremes(no_below=15,no_above=0.1,keep_n=1000)
+```
+
+```{python}
+dictionary[999]
+```
+
+```{python}
+bow_corpus=[dictionary.doc2bow(doc) for doc in processed_docs]
+```
+
+```{python}
+len(bow_corpus)
+```
+
+```{python}
+bow_corpus[100]
+```
+
+```{python}
+bow_corpus_100=bow_corpus[100]
+for i in range(len(bow_corpus_100)):
+    print("Word {} (\"{}\") appears {} time.".format(bow_corpus_100[i][0], 
+                                                     dictionary[bow_corpus_100[i][0]], 
+                                                     bow_corpus_100[i][1]))
+```
+
+### TF-IDF on our document set
+
+```{python}
+from gensim import corpora,models
+tfidf=models.TfidfModel(bow_corpus)
+```
+
+```{python}
+corpus_tfidf=tfidf[bow_corpus]
+```
+
+```{python}
+corpus_tfidf[100]
+```
+
+### Running LDA using Bag of Words
+
+```{python}
+lda_model=gensim.models.LdaMulticore(bow_corpus,
+                                    num_topics=10,
+                                    id2word=dictionary,
+                                    passes=2)
+```
+
+```{python}
+for idx,topic in lda_model.print_topics(-1):
+    print("Topic: {} \nWords: {}".format(idx, topic))
+    print("\n")
+```
+
+### Running LDA using TF-IDF
+
+```{python}
+lda_model_tfidf = gensim.models.LdaMulticore(corpus_tfidf, 
+                                             num_topics=10, 
+                                             id2word = dictionary, 
+                                             passes = 2, 
+                                             workers=4)
+```
+
+```{python}
+for idx, topic in lda_model_tfidf.print_topics(-1):
+    print("Topic: {} Word: {}".format(idx, topic))
+    print("\n")
+```
+
+### Performance evaluation by classifying sample document using LDA Bag of Words model
+
+```{python}
+processed_docs[100]
+```
+
+```{python}
+for index, score in sorted(lda_model[bow_corpus[100]], key=lambda tup: -1*tup[1]):
+    print("\nScore: {}\t \nTopic: {}".format(score, lda_model.print_topic(index, 10)))
+```
+
+```{python}
+lda_model[bow_corpus[100]]
+```
+
+```{python}
+lda_model[bow_corpus[4110]]
+```
+
+```{python}
+lda_model_tfidf[bow_corpus[4110]]
+```
+
+```{python}
+lda_model.log_perplexity(bow_corpus)
+```
+
+```{python}
+
+```

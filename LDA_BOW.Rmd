@@ -1,0 +1,142 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.10.2
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+```{python}
+import numpy as np
+import pandas as pd
+import re
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+import gensim
+from gensim import corpora,models
+```
+
+```{python}
+stop = stopwords.words('english')
+```
+
+```{python}
+a1 = pd.read_csv('content_reading1.csv',index_col=0)
+a2 = pd.read_csv('content_reading2.csv',index_col=0)
+a3 = pd.read_csv('content_reading3.csv',index_col=0)
+a4 = pd.read_csv('content_reading4.csv',index_col=0)
+```
+
+```{python}
+documents = pd.concat([a1,a2,a3,a4],ignore_index=True)
+```
+
+```{python}
+documents['content'][0]
+```
+
+```{python}
+corpus=[]
+for doc in documents.content:
+    text=re.sub('[^a-zA-z]',' ', doc)
+    text=text.lower()
+    text=text.split()
+    text=[PorterStemmer().stem(word) for word in text if not word in stop]
+    text=' '.join(text)
+    corpus.append(text)
+```
+
+```{python}
+documents['clean_content'] = corpus
+```
+
+```{python}
+processed_docs = documents.clean_content.str.split()
+```
+
+```{python}
+dictionary = gensim.corpora.Dictionary(processed_docs)
+```
+
+```{python}
+count=0
+for k,v in dictionary.iteritems():
+    print(k,v)
+    count+=1
+    if count>20:
+        break
+```
+
+```{python}
+dictionary.filter_extremes(no_below=3,no_above=0.3,keep_n=1000)
+```
+
+```{python}
+bow_corpus=[dictionary.doc2bow(doc) for doc in processed_docs]
+```
+
+```{python}
+# Train LDA model.
+from gensim.models import LdaModel
+
+# Set training parameters.
+num_topics = 3
+chunksize = 2000
+passes = 20
+iterations = 400
+eval_every = None  # Don't evaluate model perplexity, takes too much time.
+
+# Make a index to word dictionary.
+temp = dictionary[0]  # This is only to "load" the dictionary.
+id2word = dictionary.id2token
+
+model = LdaModel(
+    corpus=bow_corpus,
+    id2word=id2word,
+    chunksize=chunksize,
+    alpha='auto',
+    eta='auto',
+    iterations=iterations,
+    num_topics=num_topics,
+    passes=passes,
+    eval_every=eval_every
+)
+```
+
+```{python}
+model.log_perplexity(bow_corpus)
+```
+
+```{python}
+for idx, topic in model.print_topics(-1):
+    print("Topic: {} Word: {}".format(idx, topic))
+    print("\n")
+```
+
+```{python}
+topic=[]
+for i in range(len(bow_corpus)):
+    a = model[bow_corpus[i]]
+    a.sort(key=lambda x: x[1],reverse=True)
+    topic.append([l[0] for l in a if l[1]>0.1])
+
+T = []
+for t in topic:
+    T.extend(t)
+
+```
+
+```{python}
+for i in set(T):
+    print(f'Topic {i} have {T.count(i)} times')
+```
+
+```{python}
+
+```

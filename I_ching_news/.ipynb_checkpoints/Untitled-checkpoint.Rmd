@@ -1,0 +1,57 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.10.2
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+```{python}
+# #!pip install gensim
+```
+
+```{python}
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+import gensim 
+from nltk.tokenize import word_tokenize
+from sklearn.decomposition import TruncatedSVD
+```
+
+```{python}
+df = pd.read_csv('I_CHING_CONTENT.csv')
+```
+
+```{python}
+df.Content
+```
+
+```{python}
+from sklearn.feature_extraction.text import TfidfVectorizer
+corpus = [
+    'This is the first document.',
+    'This document is the second document.',
+    'And this is the third one.',
+    'Is this the first document?',
+]
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(corpus)
+print(vectorizer.get_feature_names())
+
+print(X.shape)
+```
+
+```{python}
+
+```
